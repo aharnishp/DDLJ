@@ -8,43 +8,63 @@ import (
 )
 
 func main() {
-	// Define the address to which you want to send the video file
-	serverAddr := "192.168.70.223:8080"
+	// Define the port the server will listen on
+	port := ":8080"
 
-	// Open the video file for reading
-	videoFile, err := os.Open("../static/vi.mp4")
+	// Listen for incoming connections
+	listener, err := net.Listen("tcp", port)
+	if err != nil {
+		fmt.Println("Error listening:", err)
+		return
+	}
+	defer listener.Close()
+	fmt.Println("Server is listening on port", port)
+
+	for {
+		// Accept a connection from a client
+		conn, err := listener.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection:", err)
+			continue
+		}
+		defer conn.Close()
+
+		// Handle the connection
+		go handleConnection(conn)
+	}
+}
+
+func handleConnection(conn net.Conn) {
+	fmt.Println("Client connected:", conn.RemoteAddr())
+
+	// Open the video file
+	videoFile, err := os.Open("../static/vi.mp4") // Change "video.mp4" to the actual path of your video file
 	if err != nil {
 		fmt.Println("Error opening video file:", err)
 		return
 	}
 	defer videoFile.Close()
 
-	// Connect to the server
-	conn, err := net.Dial("tcp", serverAddr)
-	if err != nil {
-		fmt.Println("Error connecting to the server:", err)
-		return
-	}
-	defer conn.Close()
-
-	// Read and send the video file data
+	// Create a buffer to read and send the video data
 	buffer := make([]byte, 1024)
+
 	for {
-		n, err := videoFile.Read(buffer)
+		// Read a chunk of data from the video file
+		bytesRead, err := videoFile.Read(buffer)
 		if err == io.EOF {
 			break
-		}
-		if err != nil {
+		} else if err != nil {
 			fmt.Println("Error reading video file:", err)
 			return
 		}
 
-		_, err = conn.Write(buffer[:n])
+		// Send the data chunk to the client
+		_, err = conn.Write(buffer[:bytesRead])
 		if err != nil {
-			fmt.Println("Error sending video data:", err)
+			fmt.Println("Error sending data to client:", err)
 			return
 		}
 	}
 
-	fmt.Println("Video file sent successfully.")
+	fmt.Println("Video file sent to client:", conn.RemoteAddr())
 }
