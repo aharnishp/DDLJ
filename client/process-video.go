@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// Load the TensorFlow Lite model.
-	model := tflite.NewModelFromFile("your_model.tflite")
+	model := tflite.NewModelFromFile("./SSD_TFLite3/detect.tflite.tflite")
 	defer model.Delete()
 
 	// Create an interpreter for the model.
