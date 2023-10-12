@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Define the address to which you want to send the video file
-	serverAddr := ""
+	serverAddr := "192.168.70.223:8080"
 
 	// Open the video file for reading
 	videoFile, err := os.Open("../static/vi.mp4")
