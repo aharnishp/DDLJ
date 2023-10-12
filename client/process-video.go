@@ -4,66 +4,110 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
-	"image/jpeg"
-	"os"
+	"log"
 
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	tflite "github.com/mattn/go-tflite"
 	"gocv.io/x/gocv"
+	"github.com/tensorflow/tensorflow/tensorflow/go"
 )
 
 func main() {
-	// Load the TensorFlow Lite model.
-	model := tflite.NewModelFromFile("./SSD_TFLite3/detect.tflite.tflite")
-	defer model.Delete()
-
-	// Create an interpreter for the model.
-	interpreter := tflite.NewInterpreter(model, nil)
-	defer interpreter.Delete()
-
-	// Allocate tensors for input and output.
-	interpreter.AllocateTensors()
+	// Load the pre-trained TensorFlow model for object detection.
+	modelPath := "./models/ssd_resnet152_v1_fpn_1024x1024_coco17_tpu-8/saved_model/saved_model.pb"
+	model, err := tensorflow.LoadSavedModel(modelPath, []string{"serve"}, nil)
+	if err != nil {
+		log.Fatalf("Failed to load the model: %v", err)
+	}
+	defer model.Session.Close()
 
 	// Open the video file.
-	videoFile, _ := gocv.OpenVideoCapture("./media/received_video.mp4")
-	defer videoFile.Close()
+	videoPath := "./media/received_video.mp4"
+	video, err := gocv.VideoCaptureFile(videoPath)
+	if err != nil {
+		log.Fatalf("Error opening video: %v", err)
+		return
+	}
+	defer video.Close()
 
-	// Create a window for displaying the video.
 	window := gocv.NewWindow("Object Detection")
 	defer window.Close()
 
-	// Process frames from the video.
+	img := gocv.NewMat()
+	defer img.Close()
+
 	for {
-		frame := gocv.NewMat()
-		if ok := videoFile.Read(&frame); !ok {
-			fmt.Printf("End of video\n")
-			break
+		if ok := video.Read(&img); !ok {
+			fmt.Printf("Cannot read video feed\n")
+			return
 		}
 
-		// Convert the frame to a format suitable for inference.
-		// You may need to adjust the image preprocessing based on your model.
-		// For example, resizing, normalization, etc.
-		inputTensor := interpreter.GetInputTensor(0)
-		frameData := frame.ToPtr()
-		inputTensor.CopyFromBuffer(frameData)
+		inputTensor, outputTensor, err := prepareInputOutput(model, img)
+		if err != nil {
+			log.Fatalf("Error preparing input/output: %v", err)
+		}
 
-		// Run inference.
-		interpreter.Invoke()
+		session := model.Session
+		result, err := session.Run(
+			map[tensorflow.Output]*tensorflow.Tensor{
+				model.Graph.Operation(outputTensor).Output(0): outputTensor,
+			},
+			map[tensorflow.Output]*tensorflow.Tensor{
+				model.Graph.Operation(inputTensor).Output(0): inputTensor,
+			},
+			nil,
+		)
+		if err != nil {
+			log.Fatalf("Error running session: %v", err)
+		}
 
-		// Get the output tensor for object detection.
-		outputTensor := interpreter.GetOutputTensor(0)
+		detectedObjects, err := postprocessResult(result)
+		if err != nil {
+			log.Fatalf("Error post-processing result: %v", err)
+		}
 
-		// Process the detection results (outputTensor).
+		for _, obj := range detectedObjects {
+			drawBoundingBox(&img, obj)
+		}
 
-		// Display the annotated frame with detections.
-		annotatedFrame := frame.Clone()
-		// Implement drawing bounding boxes and labels on the annotatedFrame.
-
-		// Display the annotated frame in the window.
-		window.IMShow(annotatedFrame)
-		if window.WaitKey(1) == 27 {
+		window.IMShow(img)
+		if window.WaitKey(1) >= 0 {
 			break
 		}
 	}
+}
+
+func prepareInputOutput(model *tensorflow.SavedModel, img gocv.Mat) (*tensorflow.Tensor, *tensorflow.Tensor, error) {
+	inputOp := "serving_default_input_tensor_name"
+	outputOp := "serving_default_output_tensor_name"
+
+	graph := model.Graph
+	inputTensor := graph.Operation(inputOp).Output(0)
+	outputTensor := graph.Operation(outputOp).Output(0)
+
+	tensor, err := gocv.ImgToTensor(img)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return tensor, outputTensor, nil
+}
+
+func postprocessResult(result map[tensorflow.Output]*tensorflow.Tensor) ([]Object, error) {
+	// Implement post-processing logic for your specific object detection model here.
+	// Extract object detection results from the output tensor and convert them into
+	// a list of objects with their coordinates and class labels.
+}
+
+func drawBoundingBox(img *gocv.Mat, obj Object) {
+	gocv.Rectangle(img, image.Rect(obj.X, obj.Y, obj.X+obj.Width, obj.Y+obj.Height), color.RGBA{0, 255, 0, 0}, 2)
+	label := fmt.Sprintf("%s: %.2f", obj.Class, obj.Confidence)
+	gocv.PutText(img, label, image.Point{obj.X, obj.Y - 10}, gocv.FontHersheySimplex, 0.5, color.RGBA{0, 255, 0, 0}, 2)
+}
+
+type Object struct {
+	Class      string
+	Confidence float32
+	X          int
+	Y          int
+	Width      int
+	Height     int
 }
