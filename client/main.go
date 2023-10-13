@@ -1,50 +1,119 @@
 package main
 
 import (
-    "fmt"
-    "net"
-    "os"
-    "io"
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"path/filepath"
+)
+
+const (
+	serverAddress = "localhost:8080"
+	csvFilePath   = "data.csv" // Path to your CSV file
 )
 
 func main() {
-    // Connect to the server
-    serverAddr := "192.168.70.59:8080" // Change to the server's address
-    conn, err := net.Dial("tcp", serverAddr)
-    if err != nil {
-        fmt.Println("Error connecting to server:", err)
-        return
-    }
-    defer conn.Close()
+	// Connect to the server
+	conn, err := net.Dial("tcp", serverAddress)
+	if err != nil {
+		fmt.Println("Error connecting to the server:", err)
+		return
+	}
+	defer conn.Close()
 
-    // Create a file to store the received video
-    file, err := os.Create("media/received_video.mp4")
-    if err != nil {
-        fmt.Println("Error creating the file:", err)
-        return
-    }
-    defer file.Close()
+	// Receive video segments from the server
+	for {
+		fileName, fileSize, err := receiveFileFromServer(conn)
+		if err != nil {
+			fmt.Println("Error receiving video segment:", err)
+			break
+		}
 
-    // Create a buffer to read and write data
-    buffer := make([]byte, 1024)
+		fmt.Printf("Received %s (%d bytes)\n", fileName, fileSize)
+	}
 
-    for {
-        // Read a chunk of data from the server
-        bytesRead, err := conn.Read(buffer)
-        if err == io.EOF {
-            break
-        } else if err != nil {
-            fmt.Println("Error reading data from server:", err)
-            return
-        }
+	// Send the CSV file to the server
+	sendFileToServer(conn, csvFilePath)
 
-        // Write the data chunk to the file
-        _, err = file.Write(buffer[:bytesRead])
-        if err != nil {
-            fmt.Println("Error writing data to file:", err)
-            return
-        }
-    }
+	// Wait for acknowledgment from the server
+	acknowledgment, err := receiveAcknowledgment(conn)
+	if err != nil {
+		fmt.Println("Error receiving acknowledgment:", err)
+	} else {
+		fmt.Println(acknowledgment)
+	}
+}
 
-    fmt.Println("Video file received and saved to 'media/received_video.mp4'")
+func receiveFileFromServer(conn net.Conn) (string, int64, error) {
+	reader := bufio.NewReader(conn)
+
+	// Read the file name and size from the server
+	fileInfo, err := reader.ReadString('\n')
+	if err != nil {
+		return "", 0, err
+	}
+
+	// Split the fileInfo string into name and size
+	infoParts := strings.Fields(fileInfo)
+	if len(infoParts) != 2 {
+		return "", 0, fmt.Errorf("Invalid file info received")
+	}
+
+	fileName := infoParts[0]
+	fileSize, err := strconv.ParseInt(infoParts[1], 10, 64)
+	if err != nil {
+		return "", 0, err
+	}
+
+	// Create a file to write the segment data
+	filePath := filepath.Join("received_segments", fileName)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return "", 0, err
+	}
+	defer file.Close()
+
+	// Read and write the file data
+	_, err = io.CopyN(file, reader, fileSize)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return filePath, fileSize, nil
+}
+
+func sendFileToServer(conn net.Conn, filePath string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+	defer file.Close()
+
+	fileInfo, _ := file.Stat()
+	fileSize := fileInfo.Size()
+	fileName := filepath.Base(filePath)
+
+	conn.Write([]byte(fmt.Sprintf("%s %d\n", fileName, fileSize))
+
+	buffer := make([]byte, 1024)
+	for {
+		n, err := file.Read(buffer)
+		if err != nil {
+			break
+		}
+		conn.Write(buffer[:n])
+	}
+
+	conn.Write([]byte("EOF\n"))
+}
+
+func receiveAcknowledgment(conn net.Conn) (string, error) {
+	reader := bufio.NewReader(conn)
+	acknowledgment, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	return acknowledgment, nil
 }

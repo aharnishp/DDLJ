@@ -1,4 +1,4 @@
-package main
+package process-video
 
 import (
 	"fmt"

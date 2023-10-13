@@ -1,6 +1,6 @@
 module client
 
-go 1.21.1
+go 1.20
 
 require (
 	github.com/mattn/go-pointer v0.0.1 // indirect
