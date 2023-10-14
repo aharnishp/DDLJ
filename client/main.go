@@ -16,7 +16,28 @@ const (
 	csvFilePath   = "./files/data.csv" // Path to your CSV file
 )
 
+func introduce() {
+
+	art := []string{
+		"DDDD   DDDD  L   JJJJJJJJ ",
+		"D   D  D   D L        J   ",
+		"D   D  D   D L        J   ",
+		"D   D  D   D L    J   J   ",
+		"DDDD   DDDD  LLLL JJJJJ   ",
+	}
+
+	for _, line := range art {
+
+		fmt.Println(line)
+	}
+
+	fmt.Print("Distributed Deep Learning Jobs\n")
+	fmt.Print("A project developed at Ahmedabad University by Aharnish, Jevin, Mohnish, and Yansi\n")
+}
+
 func main() {
+
+	introduce()
 	// Connect to the server
 	conn, err := net.Dial("tcp", serverAddress)
 	if err != nil {

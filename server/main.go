@@ -19,7 +19,28 @@ const (
 	duration        = 10 * time.Second
 )
 
+func introduce() {
+
+	art := []string{
+		"DDDD   DDDD  L   JJJJJJJJ ",
+		"D   D  D   D L        J   ",
+		"D   D  D   D L        J   ",
+		"D   D  D   D L    J   J   ",
+		"DDDD   DDDD  LLLL JJJJJ   ",
+	}
+
+	for _, line := range art {
+
+		fmt.Println(line)
+	}
+
+	fmt.Print("Distributed Deep Learning Jobs\n")
+	fmt.Print("A project developed at Ahmedabad University by Aharnish, Jevin, Mohnish, and Yansi\n")
+}
+
 func main() {
+
+	introduce()
 
 	var connections []net.Conn
 	// Start the server
