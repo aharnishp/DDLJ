@@ -13,7 +13,7 @@ import (
 
 const (
 	serverAddress = "localhost:8080"
-	csvFilePath   = "data.csv" // Path to your CSV file
+	csvFilePath   = "./files/data.csv" // Path to your CSV file
 )
 
 func main() {
@@ -70,7 +70,7 @@ func receiveFileFromServer(conn net.Conn) (string, int64, error) {
 	}
 
 	// Create a file to write the segment data
-	filePath := filepath.Join("received_segments", fileName)
+	filePath := filepath.Join("media/", fileName)
 	file, err := os.Create(filePath)
 	if err != nil {
 		return "", 0, err
