@@ -7,14 +7,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
 const (
 	listenAddress   = ":8080"
-	videoPath       = "video.mp4" // Change this to your video file path
-	segmentSize     = 1024 * 1024 // 1 MB segments
-	outputDirectory = "./media"
+	videoPath       = "./media/vi.mp4" // Change this to your video file path
+	segmentSize     = 1024 * 1024      // 1 MB segments
+	outputDirectory = "./media/"
 )
 
 func main() {
@@ -34,10 +35,9 @@ func main() {
 
 	splitVideo(videoPath, outputDirectory, len(connections))
 
-	for _, con := range connections {
-		handleClient(con, outputDirectory)
-	}
-
+	// for i := 0; i < len(connections); i++ {
+	// 	handleClient(connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+	// }
 }
 
 func connectAvailableClients(listener net.Listener) []net.Conn {
@@ -48,6 +48,7 @@ func connectAvailableClients(listener net.Listener) []net.Conn {
 	startTime := time.Now()
 
 	for {
+		fmt.Println("Waiting" + fmt.Sprint(time.Since(startTime)))
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection:", err)
@@ -63,19 +64,15 @@ func connectAvailableClients(listener net.Listener) []net.Conn {
 	return connections
 }
 
-func handleClient(conn net.Conn, videoDirectory string) {
+func handleClient(conn net.Conn, videoSegmentPath string, filePath string) {
 	defer conn.Close()
 
 	fmt.Printf("Client %s connected.\n", conn.RemoteAddr())
 
-	// Read the video segments and send them to the client
-	segmentFiles, _ := filepath.Glob(videoDirectory + "/*.mp4")
-	for _, segmentFile := range segmentFiles {
-		sendFileToClient(conn, segmentFile)
-	}
+	sendFileToClient(conn, videoSegmentPath)
 
 	// Receive the CSV file from the client
-	receivedCSVPath := "received.csv"
+	receivedCSVPath := filePath
 	receiveFileFromClient(conn, receivedCSVPath)
 	fmt.Printf("Received CSV file from client %s.\n", conn.RemoteAddr())
 
@@ -91,18 +88,22 @@ func splitVideo(inputVideo string, outputDirectory string, numParts int) {
 	}
 
 	// Calculate the duration of the input video.
-	ffprobeCmd := exec.Command("ffmpeg", "-i", inputVideo, "-show_entries", "format=duration", "-v", "quiet", "-of", "csv=p=0")
+	ffprobeCmd := exec.Command("ffprobe", "-i", inputVideo, "-show_entries", "format=duration", "-v", "quiet", "-of", "csv=p=0")
 	durationBytes, err := ffprobeCmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("Error getting video duration: %v\n", err)
 		return
 	}
 
-	duration := string(durationBytes)
-	fmt.Printf("Input video duration: %s seconds\n", duration)
+	duration, err := strconv.ParseFloat(string(durationBytes[:4]), 64)
+	if err != nil {
+		fmt.Printf("Error parsing duration of video")
+	}
+	fmt.Printf("Input video duration: %f seconds\n", duration)
 
 	// Calculate the duration of each part.
-	partDuration := fmt.Sprintf("%.2f", float64(duration)/float64(numParts))
+
+	partDuration := duration / float64(numParts)
 
 	// Split the video into equal parts.
 	for i := 0; i < numParts; i++ {
