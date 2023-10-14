@@ -1,1 +1,7 @@
 *.mp4
+
+server/files/
+server/media/
+
+client/files/
+client/media/

@@ -3,9 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -57,7 +60,7 @@ func receiveFileFromServer(conn net.Conn) (string, int64, error) {
 	// Split the fileInfo string into name and size
 	infoParts := strings.Fields(fileInfo)
 	if len(infoParts) != 2 {
-		return "", 0, fmt.Errorf("Invalid file info received")
+		return "", 0, fmt.Errorf("invalid file info received")
 	}
 
 	fileName := infoParts[0]
@@ -95,7 +98,7 @@ func sendFileToServer(conn net.Conn, filePath string) {
 	fileSize := fileInfo.Size()
 	fileName := filepath.Base(filePath)
 
-	conn.Write([]byte(fmt.Sprintf("%s %d\n", fileName, fileSize))
+	conn.Write([]byte(fmt.Sprintf("%s %d\n", fileName, fileSize)))
 
 	buffer := make([]byte, 1024)
 	for {
