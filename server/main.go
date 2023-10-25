@@ -16,7 +16,7 @@ const (
 	videoPath       = "./media/vi.mp4" // Change this to your video file path
 	segmentSize     = 1024 * 1024      // 1 MB segments
 	outputDirectory = "./media/"
-	duration        = 10 * time.Second
+	duration        = 10
 )
 
 func introduce() {
@@ -51,17 +51,27 @@ func main() {
 	}
 	defer listener.Close()
 
-	fmt.Println("Server is listening on port", listenAddress)
+	for {
 
-	dataChannel := make(chan []net.Conn)
-	stopAccepting := make(chan struct{})
+		fmt.Println("Server is listening on port", listenAddress)
 
-	go connectAvailableClients(listener, stopAccepting, dataChannel)
-	time.Sleep(duration)
-	close(stopAccepting)
+		dataChannel := make(chan []net.Conn)
+		stopAccepting := make(chan struct{})
 
-	connections = <-dataChannel
+		go connectAvailableClients(listener, stopAccepting, dataChannel)
 
+		waitFor(duration)
+		close(stopAccepting)
+
+		connections = <-dataChannel
+
+		if len(connections) == 0 {
+			fmt.Println("No Client Available: Waiting...")
+		} else {
+			break
+		}
+
+	}
 	splitVideo(videoPath, outputDirectory, len(connections))
 
 	for i := 0; i < len(connections); i++ {
@@ -69,10 +79,18 @@ func main() {
 	}
 }
 
+func waitFor(duration int) {
+	for i := 0; i < duration; i++ {
+		fmt.Println("Waiting for client: " + fmt.Sprint(duration-i) + " seconds left")
+		time.Sleep(1 * time.Second)
+	}
+}
+
 func connectAvailableClients(listener net.Listener, stopAccepting chan struct{}, dataChannel chan []net.Conn) {
 	var connections []net.Conn
 
 	for {
+		clientNumber := 0
 		select {
 		case <-stopAccepting:
 			dataChannel <- connections
@@ -83,9 +101,10 @@ func connectAvailableClients(listener net.Listener, stopAccepting chan struct{},
 				fmt.Println("Error accepting connection:", err)
 				continue
 			}
-
+			fmt.Println("Accepted Client : " + fmt.Sprint(clientNumber))
 			connections = append(connections, conn)
 			dataChannel <- connections
+			clientNumber += 1
 		}
 	}
 }
