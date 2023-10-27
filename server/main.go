@@ -205,6 +205,7 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "EOF" {
+			conn.Write([]byte("\n"))
 			break
 		}
 		file.WriteString(line + "\n")

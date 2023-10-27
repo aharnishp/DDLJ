@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const (
+var (
 	serverAddress = "localhost:8080"
 	csvFilePath   = "./files/data.csv" // Path to your CSV file
 )
@@ -38,6 +38,16 @@ func introduce() {
 func main() {
 
 	introduce()
+	if len(os.Args) > 1 {
+		serverAddress = string(os.Args[0])
+		csvFilePath = string(os.Args[1])
+	} else {
+		fmt.Println("Go Client worker")
+		fmt.Println("Args: ServerAddress CSVFilePath")
+
+		fmt.Println("Using Default Server Address and file path")
+
+	}
 	// Connect to the server
 	conn, err := net.Dial("tcp", serverAddress)
 	if err != nil {
@@ -47,15 +57,15 @@ func main() {
 	defer conn.Close()
 
 	// Receive video segments from the server
-	for {
-		fileName, fileSize, err := receiveFileFromServer(conn)
-		if err != nil {
-			fmt.Println("Error receiving video segment:", err)
-			break
-		}
+	// for {
+	fileName, fileSize, err := receiveFileFromServer(conn)
+	if err != nil {
+		fmt.Println("Error receiving video segment:", err)
 
-		fmt.Printf("Received %s (%d bytes)\n", fileName, fileSize)
 	}
+
+	fmt.Printf("Received %s (%d bytes)\n", fileName, fileSize)
+	// }
 
 	// Send the CSV file to the server
 	sendFileToServer(conn, csvFilePath)
