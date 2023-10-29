@@ -140,7 +140,7 @@ func sendFileToServer(conn net.Conn, filePath string) {
 		conn.Write(buffer[:n])
 	}
 
-	conn.Write([]byte("EOF\n"))
+	conn.Write([]byte("\nEOF\n"))
 }
 
 func receiveAcknowledgment(conn net.Conn) (string, error) {

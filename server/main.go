@@ -16,7 +16,7 @@ const (
 	videoPath       = "./media/vi.mp4" // Change this to your video file path
 	segmentSize     = 1024 * 1024      // 1 MB segments
 	outputDirectory = "./media/"
-	duration        = 10
+	duration        = 30
 )
 
 func introduce() {
