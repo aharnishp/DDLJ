@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -11,12 +12,12 @@ import (
 	"time"
 )
 
-const (
+var (
 	listenAddress   = ":8080"
 	videoPath       = "./media/vi.mp4" // Change this to your video file path
 	segmentSize     = 1024 * 1024      // 1 MB segments
 	outputDirectory = "./media/"
-	duration        = 30
+	duration        = 5
 )
 
 func introduce() {
@@ -38,10 +39,24 @@ func introduce() {
 	fmt.Print("A project developed at Ahmedabad University by Aharnish, Jevin, Mohnish, and Yansi\n")
 }
 
+func setup() {
+	// Define command-line flags and set default values
+	flag.StringVar(&listenAddress, "listen", ":8080", "Listen address for the server")
+	flag.StringVar(&videoPath, "video", "./media/vi.mp4", "Path to the video file")
+	flag.IntVar(&segmentSize, "segmentSize", 1024*1024, "Segment size in bytes")
+	flag.StringVar(&outputDirectory, "outputDir", "./media/", "Output directory")
+	flag.IntVar(&duration, "duration", 5, "Segment duration in seconds")
+
+	// Parse command-line arguments
+	flag.Parse()
+	listenAddress = ":" + listenAddress
+
+}
+
 func main() {
 
 	introduce()
-
+	setup()
 	var connections []net.Conn
 	// Start the server
 	listener, err := net.Listen("tcp", listenAddress)

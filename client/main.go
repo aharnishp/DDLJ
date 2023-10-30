@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -67,6 +68,9 @@ func main() {
 	fmt.Printf("Received %s (%d bytes)\n", fileName, fileSize)
 	// }
 
+	// run the python service
+	runAnalysisService()
+
 	// Send the CSV file to the server
 	sendFileToServer(conn, csvFilePath)
 
@@ -79,6 +83,13 @@ func main() {
 	}
 }
 
+func runAnalysisService() {
+	c := exec.Command("python ./client/service/main.py")
+
+	if err := c.Run(); err != nil {
+		fmt.Println("Error: ", err)
+	}
+}
 func receiveFileFromServer(conn net.Conn) (string, int64, error) {
 	reader := bufio.NewReader(conn)
 
