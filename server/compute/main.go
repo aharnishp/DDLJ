@@ -95,6 +95,7 @@ func main() {
 }
 
 func waitFor(duration int) {
+
 	for i := 0; i < duration; i++ {
 		fmt.Println("Waiting for client: " + fmt.Sprint(duration-i) + " seconds left")
 		time.Sleep(1 * time.Second)
