@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"image"
 	"time"
+	"os"
+
+	// "image/color"
+	"image/png"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/speaker"
@@ -67,9 +71,10 @@ func readVideoAndAudio(media *reisen.Media) (<-chan *image.RGBA, <-chan [2]float
 	}*/
 
 	go func() {
+		counter := 0
 		for {
 			packet, gotPacket, err := media.ReadPacket()
-
+			
 			if err != nil {
 				go func(err error) {
 					errs <- err
@@ -103,6 +108,22 @@ func readVideoAndAudio(media *reisen.Media) (<-chan *image.RGBA, <-chan [2]float
 				}
 
 				frameBuffer <- videoFrame.Image()
+				counter += 1
+				file, err := os.Create(fmt.Sprintf("../temp/output%d.png",counter))
+				if err != nil {
+					panic(err)
+				}
+				defer file.Close()
+
+				// Encode the RGBA image to PNG and save it to the file
+				err = png.Encode(file, videoFrame.Image())
+				if err != nil {
+					panic(err)
+				}
+
+				println("PNG image saved successfully.")
+
+				
 
 			case reisen.StreamAudio:
 				s := media.Streams()[packet.StreamIndex()].(*reisen.AudioStream)
