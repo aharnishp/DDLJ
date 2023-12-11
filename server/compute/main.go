@@ -178,6 +178,7 @@ func main() {
 				executeService <- eventTrigger{Type: "executeService", Payload: false}
 
 			case false:
+				time.Sleep(1 * time.Second)
 				continue
 			}
 
@@ -214,24 +215,44 @@ func (cm *ConnectionManager) AcceptConnections(listener net.Listener) {
 	}
 }
 
+func isConnectionActive(conn net.Conn) bool {
+	// Set a deadline for the read or write operation
+	conn.SetReadDeadline(time.Now().Add(time.Second))
+
+	// Attempt to read a small amount of data
+	buffer := make([]byte, 1)
+	_, err := conn.Read(buffer)
+
+	// Reset the deadline
+	conn.SetReadDeadline(time.Time{})
+
+	// Check for errors
+	if err != nil {
+		// Check if the error indicates a timeout, which means the connection is still active
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			return true
+		}
+
+		// If the error is not a timeout, the connection is likely closed
+		return false
+	}
+
+	return true
+}
+
 // handleConnection handles the tasks associated with a connection
 func (cm *ConnectionManager) handleConnection(conn net.Conn) {
 	defer conn.Close()
-	var buff []byte
 	for {
-		connVal, err := conn.Read(buff)
-		if err != nil {
+
+		if !isConnectionActive(conn) {
 			fmt.Println("Connection broken with client")
 			cm.removeConnection(conn)
 			break
 		}
 
-		if connVal < 0 {
-			fmt.Println("Connection broken with client")
-			cm.removeConnection(conn)
-			break
-		}
-
+		time.Sleep(1 * time.Second)
+		fmt.Println("Client alive")
 	}
 }
 
@@ -342,6 +363,7 @@ func splitVideo(inputVideo string, outputDirectory string, numParts int) {
 		}
 		fmt.Printf("Part %d: %s to %s\n", i+1, trimStart, trimEnd)
 	}
+	return
 
 }
 
@@ -368,6 +390,8 @@ func sendFileToClient(conn net.Conn, filePath string) {
 		}
 		conn.Write(buffer[:n])
 	}
+
+	return
 }
 
 func receiveFileFromClient(conn net.Conn, filePath string) {
@@ -387,5 +411,7 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 		}
 		file.WriteString(line + "\n")
 	}
+
+	return
 
 }
