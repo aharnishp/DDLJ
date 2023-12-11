@@ -102,6 +102,7 @@ func (cm *ConnectionManager) AcceptConnections(listener net.Listener) {
 		cm.addConnection(conn)
 
 		// Handle the connection concurrently
+		fmt.Println("Accepted connection from", conn.RemoteAddr())
 		go cm.handleConnection(conn)
 	}
 }
@@ -109,10 +110,22 @@ func (cm *ConnectionManager) AcceptConnections(listener net.Listener) {
 // handleConnection handles the tasks associated with a connection
 func (cm *ConnectionManager) handleConnection(conn net.Conn) {
 	defer conn.Close()
+	var buff []byte
+	for {
+		connVal, err := conn.Read(buff)
+		if err != nil {
+			fmt.Println("Connection broken with client")
+			cm.removeConnection(conn)
+			break
+		}
 
-	// Perform tasks with the connection
-	// For simplicity, let's just print a message
-	fmt.Println("Accepted connection from", conn.RemoteAddr())
+		if connVal < 0 {
+			fmt.Println("Connection broken with client")
+			cm.removeConnection(conn)
+			break
+		}
+
+	}
 }
 
 // addConnection adds a connection to the connection array
@@ -121,6 +134,20 @@ func (cm *ConnectionManager) addConnection(conn net.Conn) {
 	defer cm.mutex.Unlock()
 
 	cm.connections = append(cm.connections, conn)
+	fmt.Println("Number of connections:", len(cm.connections))
+}
+
+func (cm *ConnectionManager) removeConnection(conn net.Conn) {
+	cm.mutex.Lock()
+	defer cm.mutex.Unlock()
+	var index = 0
+	for i, c := range cm.connections {
+		if conn == c {
+			index = i
+			break
+		}
+	}
+	cm.connections = append(cm.connections[:index], cm.connections[index+1:]...)
 	fmt.Println("Number of connections:", len(cm.connections))
 }
 
