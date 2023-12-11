@@ -175,7 +175,7 @@ func main() {
 				for i := 0; i < len(connectionManager.connections); i++ {
 					handleClient(connectionManager.connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
 				}
-				executeService <- eventTrigger{Type: "executeService", Payload: false}
+				// executeService <- eventTrigger{Type: "executeService", Payload: false}
 
 			case false:
 				time.Sleep(1 * time.Second)
