@@ -1,7 +1,12 @@
 *.mp4
 
+
 server/files/
 server/media/
+
+server/compute/files/
+server/compute/media/
+
 
 client/files/
 client/media/

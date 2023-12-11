@@ -37,15 +37,16 @@ func introduce() {
 
 	fmt.Print("Distributed Deep Learning Jobs\n")
 	fmt.Print("A project developed at Ahmedabad University by Aharnish, Jevin, Mohnish, and Yansi\n")
+
 }
 
 func setup() {
 	// Define command-line flags and set default values
-	flag.StringVar(&listenAddress, "listen", ":8080", "Listen address for the server")
+	flag.StringVar(&listenAddress, "listen", "8080", "Listen address for the server")
 	flag.StringVar(&videoPath, "video", "./media/vi.mp4", "Path to the video file")
 	flag.IntVar(&segmentSize, "segmentSize", 1024*1024, "Segment size in bytes")
 	flag.StringVar(&outputDirectory, "outputDir", "./media/", "Output directory")
-	flag.IntVar(&duration, "duration", 5, "Segment duration in seconds")
+	flag.IntVar(&duration, "duration", 20, "Segment duration in seconds")
 
 	// Parse command-line arguments
 	flag.Parse()
@@ -104,10 +105,14 @@ func waitFor(duration int) {
 
 func connectAvailableClients(listener net.Listener, stopAccepting chan struct{}, dataChannel chan []net.Conn) {
 	var connections []net.Conn
-
+	clientNumber := 0
+	ln := 0
+	fmt.Println("loop number" + fmt.Sprint(ln))
 	for {
-		clientNumber := 0
+		ln += 1
+		fmt.Println("loop number" + fmt.Sprint(ln))
 		select {
+
 		case <-stopAccepting:
 			dataChannel <- connections
 			return
@@ -120,8 +125,11 @@ func connectAvailableClients(listener net.Listener, stopAccepting chan struct{},
 			fmt.Println("Accepted Client : " + fmt.Sprint(clientNumber))
 			connections = append(connections, conn)
 			dataChannel <- connections
+
 			clientNumber += 1
+
 		}
+
 	}
 }
 
