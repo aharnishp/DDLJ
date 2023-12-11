@@ -71,6 +71,11 @@ func runWebService(serverPort string, eventTrigger chan<- eventTrigger) {
 		"formatAsDate": formatAsDate,
 	})
 
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "DDLJ",
+		})
+	})
 	router.POST("/upload", func(c *gin.Context) {
 		file, err := c.FormFile("video")
 		if err != nil {
