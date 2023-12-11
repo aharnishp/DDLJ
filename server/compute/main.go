@@ -289,7 +289,6 @@ func connectAvailableClients(listener net.Listener, stopAccepting chan struct{},
 }
 
 func handleClient(conn net.Conn, videoSegmentPath string, filePath string) {
-	defer conn.Close()
 
 	fmt.Printf("Client %s connected.\n", conn.RemoteAddr())
 
@@ -300,8 +299,8 @@ func handleClient(conn net.Conn, videoSegmentPath string, filePath string) {
 	receiveFileFromClient(conn, receivedCSVPath)
 	fmt.Printf("Received CSV file from client %s.\n", conn.RemoteAddr())
 
-	// Acknowledge the client
-	conn.Write([]byte("CSV file received. Acknowledged.\n"))
+	// // Acknowledge the client
+	// conn.Write([]byte("CSV file received. Acknowledged.\n"))
 }
 
 func splitVideo(inputVideo string, outputDirectory string, numParts int) {
@@ -384,9 +383,9 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "EOF" {
-			conn.Write([]byte("\n"))
 			break
 		}
 		file.WriteString(line + "\n")
 	}
+
 }

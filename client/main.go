@@ -86,10 +86,11 @@ func main() {
 
 	for {
 
-		if !isConnectionActive((conn)) {
-			fmt.Println("Error: Connection Lost")
-			break
-		}
+		// if !isConnectionActive((conn)) {
+		// 	fmt.Println("Error: Connection Lost")
+		// 	break
+		// }
+
 		fileName, fileSize, err := receiveFileFromServer(conn)
 		if err != nil {
 			fmt.Println("Error receiving video segment:", err)
@@ -105,13 +106,13 @@ func main() {
 		// Send the CSV file to the server
 		sendFileToServer(conn, csvFilePath)
 
-		// Wait for acknowledgment from the server
-		acknowledgment, err := receiveAcknowledgment(conn)
-		if err != nil {
-			fmt.Println("Error receiving acknowledgment:", err)
-		} else {
-			fmt.Println(acknowledgment)
-		}
+		// // Wait for acknowledgment from the server
+		// acknowledgment, err := receiveAcknowledgment(conn)
+		// if err != nil {
+		// 	fmt.Println("Error receiving acknowledgment:", err)
+		// } else {
+		// 	fmt.Println(acknowledgment)
+		// }
 	}
 }
 
@@ -126,12 +127,13 @@ func runAnalysisService() {
 	time.Sleep(3 * time.Second)
 	fmt.Println("Update: Service done")
 }
+
 func receiveFileFromServer(conn net.Conn) (string, int64, error) {
 	reader := bufio.NewReader(conn)
 
 	// Read the file name and size from the server
 	fileInfo, err := reader.ReadString('\n')
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return "", 0, err
 	}
 
@@ -188,6 +190,7 @@ func sendFileToServer(conn net.Conn, filePath string) {
 	}
 
 	conn.Write([]byte("\nEOF\n"))
+
 }
 
 func receiveAcknowledgment(conn net.Conn) (string, error) {
