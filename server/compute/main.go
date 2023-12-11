@@ -23,6 +23,7 @@ var (
 	segmentSize     = 1024 * 1024      // 1 MB segments
 	outputDirectory = "./media/"
 	duration        = 5
+	filePath        = "./files/file0.csv"
 )
 
 func introduce() {
@@ -64,7 +65,7 @@ func formatAsDate(t time.Time) string {
 	return fmt.Sprintf("%d%02d/%02d", year, month, day)
 }
 
-func runWebService(serverPort string, eventTrigger chan<- eventTrigger) {
+func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 	router := gin.Default()
 	router.Delims("{[{", "}]}")
 	router.SetFuncMap(template.FuncMap{
@@ -76,6 +77,35 @@ func runWebService(serverPort string, eventTrigger chan<- eventTrigger) {
 			"message": "DDLJ",
 		})
 	})
+
+	router.GET("/dummyService", func(c *gin.Context) {
+
+		startTrigger <- eventTrigger{Type: "executeService", Payload: true}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Your Service has started",
+		})
+	})
+
+	router.GET("/downloadFile", func(c *gin.Context) {
+
+		_, err := os.Stat(filePath)
+		if os.IsNotExist(err) {
+
+			c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+			return
+		}
+
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", "file0.csv"))
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Expires", "0")
+		c.Header("Cache-Control", "must-revalidate")
+		c.Header("Pragma", "public")
+
+		c.File(filePath)
+	})
+
 	router.POST("/upload", func(c *gin.Context) {
 		file, err := c.FormFile("video")
 		if err != nil {
