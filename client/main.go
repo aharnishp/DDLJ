@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -36,12 +37,37 @@ func introduce() {
 	fmt.Print("A project developed at Ahmedabad University by Aharnish, Jevin, Mohnish, and Yansi\n")
 }
 
+func isConnectionActive(conn net.Conn) bool {
+	// Set a deadline for the read or write operation
+	conn.SetReadDeadline(time.Now().Add(time.Second))
+
+	// Attempt to read a small amount of data
+	buffer := make([]byte, 1)
+	_, err := conn.Read(buffer)
+
+	// Reset the deadline
+	conn.SetReadDeadline(time.Time{})
+
+	// Check for errors
+	if err != nil {
+		// Check if the error indicates a timeout, which means the connection is still active
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			return true
+		}
+
+		// If the error is not a timeout, the connection is likely closed
+		return false
+	}
+
+	return true
+}
+
 func main() {
 
 	introduce()
 	if len(os.Args) > 1 {
-		serverAddress = string(os.Args[0])
-		csvFilePath = string(os.Args[1])
+		serverAddress = string(os.Args[1])
+		csvFilePath = string(os.Args[2])
 	} else {
 		fmt.Println("Go Client worker")
 		fmt.Println("Args: ServerAddress CSVFilePath")
@@ -55,31 +81,38 @@ func main() {
 		fmt.Println("Error connecting to the server:", err)
 		return
 	}
-	defer conn.Close()
+	// defer conn.Close()
 
 	// Receive video segments from the server
-	// for {
-	fileName, fileSize, err := receiveFileFromServer(conn)
-	if err != nil {
-		fmt.Println("Error receiving video segment:", err)
 
-	}
+	for {
 
-	fmt.Printf("Received %s (%d bytes)\n", fileName, fileSize)
-	// }
+		if !isConnectionActive((conn)) {
+			fmt.Println("Error: Connection Lost")
+			break
+		}
+		fileName, fileSize, err := receiveFileFromServer(conn)
+		if err != nil {
+			fmt.Println("Error receiving video segment:", err)
 
-	// run the python service
-	runAnalysisService()
+		}
 
-	// Send the CSV file to the server
-	sendFileToServer(conn, csvFilePath)
+		fmt.Printf("Received %s (%d bytes)\n", fileName, fileSize)
+		// }
 
-	// Wait for acknowledgment from the server
-	acknowledgment, err := receiveAcknowledgment(conn)
-	if err != nil {
-		fmt.Println("Error receiving acknowledgment:", err)
-	} else {
-		fmt.Println(acknowledgment)
+		// // run the python service
+		// runAnalysisService()
+
+		// Send the CSV file to the server
+		sendFileToServer(conn, csvFilePath)
+
+		// Wait for acknowledgment from the server
+		acknowledgment, err := receiveAcknowledgment(conn)
+		if err != nil {
+			fmt.Println("Error receiving acknowledgment:", err)
+		} else {
+			fmt.Println(acknowledgment)
+		}
 	}
 }
 
