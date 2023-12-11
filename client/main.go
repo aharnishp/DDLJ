@@ -81,7 +81,7 @@ func main() {
 		fmt.Println("Error connecting to the server:", err)
 		return
 	}
-	// defer conn.Close()
+	defer conn.Close()
 
 	// Receive video segments from the server
 

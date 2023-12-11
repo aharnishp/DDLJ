@@ -4,13 +4,17 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"html/template"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -55,6 +59,51 @@ func setup() {
 
 }
 
+func formatAsDate(t time.Time) string {
+	year, month, day := t.Date()
+	return fmt.Sprintf("%d%02d/%02d", year, month, day)
+}
+
+func runWebService(serverPort string, eventTrigger chan<- eventTrigger) {
+	router := gin.Default()
+	router.Delims("{[{", "}]}")
+	router.SetFuncMap(template.FuncMap{
+		"formatAsDate": formatAsDate,
+	})
+
+	router.POST("/upload", func(c *gin.Context) {
+		file, err := c.FormFile("video")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Set the file path for storing
+		filePath := "../media/" + file.Filename
+
+		// Save the file to the specified directory
+		if err := c.SaveUploadedFile(file, filePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "File uploaded successfully",
+		})
+	})
+
+	router.GET("/upload", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "./templates/upload/upload.html", gin.H{"message": "OK"})
+	})
+
+	router.Run(":" + serverPort)
+}
+
+type eventTrigger struct {
+	Type    string
+	Payload bool
+}
+
 func main() {
 
 	introduce()
@@ -66,21 +115,44 @@ func main() {
 		return
 	}
 	defer listener.Close()
-	fmt.Println("Server is listening on port", listenAddress)
+	fmt.Println("Slave Connection Server is listening on port", listenAddress)
+
 	connectionManager := &ConnectionManager{}
+
+	var executeService = make(chan eventTrigger)
+
+	go runWebService("8000", executeService)
 
 	for {
 		go connectionManager.AcceptConnections(listener)
 
 		fmt.Println("Number of active connections: " + fmt.Sprint(len(connectionManager.connections)))
-		time.Sleep(1 * time.Second)
+		select {
+		case msg, ok := <-executeService:
+			if !ok {
+				fmt.Println("Error: Execute service issue")
+				break
+			}
+
+			switch msg.Payload {
+			case true:
+				splitVideo(videoPath, outputDirectory, len(connectionManager.connections))
+				for i := 0; i < len(connectionManager.connections); i++ {
+					handleClient(connectionManager.connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+				}
+				executeService <- eventTrigger{Type: "executeService", Payload: false}
+
+			case false:
+				continue
+			}
+
+		default:
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
 	}
 
-	// splitVideo(videoPath, outputDirectory, len(connectionManager.connections))
-
-	// for i := 0; i < len(connectionManager.connections); i++ {
-	// 	handleClient(connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
-	// }
 }
 
 // ConnectionManager represents a structure to manage connections
