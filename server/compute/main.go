@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -58,7 +59,6 @@ func main() {
 
 	introduce()
 	setup()
-	var connections []net.Conn
 	// Start the server
 	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
@@ -66,41 +66,62 @@ func main() {
 		return
 	}
 	defer listener.Close()
+	fmt.Println("Server is listening on port", listenAddress)
+	connectionManager := &ConnectionManager{}
 
 	for {
+		go connectionManager.AcceptConnections(listener)
 
-		fmt.Println("Server is listening on port", listenAddress)
+		fmt.Println("Number of active connections: " + fmt.Sprint(len(connectionManager.connections)))
+		time.Sleep(1 * time.Second)
+	}
 
-		dataChannel := make(chan []net.Conn)
-		stopAccepting := make(chan struct{})
+	// splitVideo(videoPath, outputDirectory, len(connectionManager.connections))
 
-		go connectAvailableClients(listener, stopAccepting, dataChannel)
+	// for i := 0; i < len(connectionManager.connections); i++ {
+	// 	handleClient(connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+	// }
+}
 
-		waitFor(duration)
-		close(stopAccepting)
+// ConnectionManager represents a structure to manage connections
+type ConnectionManager struct {
+	connections []net.Conn
+	mutex       sync.Mutex
+}
 
-		connections = <-dataChannel
-
-		if len(connections) == 0 {
-			fmt.Println("No Client Available: Waiting...")
-		} else {
-			break
+// AcceptConnections continuously accepts connections and updates the connection array
+func (cm *ConnectionManager) AcceptConnections(listener net.Listener) {
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection:", err)
+			continue
 		}
 
-	}
-	splitVideo(videoPath, outputDirectory, len(connections))
+		// Add the connection to the array
+		cm.addConnection(conn)
 
-	for i := 0; i < len(connections); i++ {
-		handleClient(connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+		// Handle the connection concurrently
+		go cm.handleConnection(conn)
 	}
 }
 
-func waitFor(duration int) {
+// handleConnection handles the tasks associated with a connection
+func (cm *ConnectionManager) handleConnection(conn net.Conn) {
+	defer conn.Close()
 
-	for i := 0; i < duration; i++ {
-		fmt.Println("Waiting for client: " + fmt.Sprint(duration-i) + " seconds left")
-		time.Sleep(1 * time.Second)
-	}
+	// Perform tasks with the connection
+	// For simplicity, let's just print a message
+	fmt.Println("Accepted connection from", conn.RemoteAddr())
+}
+
+// addConnection adds a connection to the connection array
+func (cm *ConnectionManager) addConnection(conn net.Conn) {
+	cm.mutex.Lock()
+	defer cm.mutex.Unlock()
+
+	cm.connections = append(cm.connections, conn)
+	fmt.Println("Number of connections:", len(cm.connections))
 }
 
 func connectAvailableClients(listener net.Listener, stopAccepting chan struct{}, dataChannel chan []net.Conn) {
