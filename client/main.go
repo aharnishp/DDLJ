@@ -186,10 +186,12 @@ func sendFileToServer(conn net.Conn, filePath string) {
 		if err != nil {
 			break
 		}
+		fmt.Println(buffer)
 		conn.Write(buffer[:n])
 	}
 
 	conn.Write([]byte("\nEOF\n"))
+	return
 
 }
 

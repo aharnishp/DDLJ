@@ -412,11 +412,17 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "EOF" {
+			file.WriteString(line + "\n")
 			break
 		}
+		fmt.Println(line)
 		file.WriteString(line + "\n")
 	}
 
 	return
+
+}
+
+func flushStorage() {
 
 }
