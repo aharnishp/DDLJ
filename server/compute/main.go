@@ -252,7 +252,6 @@ func (cm *ConnectionManager) handleConnection(conn net.Conn) {
 		}
 
 		time.Sleep(1 * time.Second)
-		fmt.Println("Client alive")
 	}
 }
 
@@ -340,6 +339,9 @@ func splitVideo(inputVideo string, outputDirectory string, numParts int) {
 	}
 
 	duration, err := strconv.ParseFloat(string(durationBytes[:4]), 64)
+
+	fmt.Println("Video Duration: " + fmt.Sprint(duration))
+
 	if err != nil {
 		fmt.Printf("Error parsing duration of video")
 	}
@@ -349,11 +351,14 @@ func splitVideo(inputVideo string, outputDirectory string, numParts int) {
 
 	partDuration := duration / float64(numParts)
 
+	fmt.Println("Part Duration: " + fmt.Sprint(partDuration))
 	// Split the video into equal parts.
 	for i := 0; i < numParts; i++ {
 		outputFile := filepath.Join(outputDirectory, fmt.Sprintf("part%d.mp4", i))
 		trimStart := fmt.Sprintf("%.2f", float64(i)*float64(partDuration))
 		trimEnd := fmt.Sprintf("%.2f", float64(i+1)*float64(partDuration))
+
+		fmt.Println("Trim Start" + fmt.Sprint(trimStart) + ":::: trim end:  " + fmt.Sprintf(trimEnd))
 
 		splitCmd := exec.Command("ffmpeg", "-i", inputVideo, "-ss", trimStart, "-to", trimEnd, "-c", "copy", outputFile)
 		err := splitCmd.Run()
