@@ -14,6 +14,7 @@
 
 # cd py-tensorflow/ && source tflite1-env/bin/activate && python3 cc-video-in.py --modeldir models/SSD_TFLite3 --video ../media/part0.mp4 --out ../files/data.csv
 
+add_path_prefix = "py-tensorflow/"
 
 # Import packages
 import os
@@ -24,7 +25,7 @@ import sys
 import importlib.util
 
 store_csv = 1
-csv_name = "out.csv"
+csv_name = add_path_prefix + "out.csv"
 headless_run = 1
 
 skip_ratio = 10 # 10 means only 1 out of 10 frames will be processed
@@ -32,23 +33,26 @@ skip_ratio = 10 # 10 means only 1 out of 10 frames will be processed
 # Define and parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--modeldir', help='Folder the .tflite file is located in',
-                    required=True)
+                    required=False)
 parser.add_argument('--graph', help='Name of the .tflite file, if different than detect.tflite',
-                    default='detect.tflite')
+                    default=('detect.tflite'))
 parser.add_argument('--labels', help='Name of the labelmap file, if different than labelmap.txt',
-                    default='labelmap.txt')
+                    default=('labelmap.txt'))
 parser.add_argument('--threshold', help='Minimum confidence threshold for displaying detected objects',
                     default=0.5)
 parser.add_argument('--video', help='Name of the video file',
-                    default='test.mp4')
+                    default=(add_path_prefix + 'test.mp4'))
 parser.add_argument('--outcsv', help='Name of the csv file',
-                    default='../files/data.csv')
+                    default=add_path_prefix + ('../files/data.csv'))
 parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed up detection',
                     action='store_true')
 
 args = parser.parse_args()
 
 MODEL_NAME = args.modeldir
+if(type(MODEL_NAME) == type(None)):
+    MODEL_NAME = add_path_prefix + "models/SSD_TFLite3"
+
 GRAPH_NAME = args.graph
 LABELMAP_NAME = args.labels
 VIDEO_NAME = args.video
@@ -151,14 +155,13 @@ while(video.isOpened()):
 
     frame_count += 1
 
-    if(frame_count % skip_ratio != 0):
-        continue
-
     # Acquire frame and resize to expected shape [1xHxWx3]
     ret, frame = video.read()
     if not ret:
       print('Reached the end of the video!')
       break
+    if(frame_count % skip_ratio != 0):
+        continue
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame_resized = cv2.resize(frame_rgb, (width, height))
     input_data = np.expand_dims(frame_resized, axis=0)
