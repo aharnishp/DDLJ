@@ -217,7 +217,7 @@ func receiveFileFromServer(conn net.Conn) (string, int64, error) {
 	}
 
 	// Create a file to write the segment data
-	filePath := filepath.Join("media/", fileName)
+	filePath := filepath.Join("media/", "part0.mp4") // fileName)
 	file, err := os.Create(filePath)
 	if err != nil {
 		return "", 0, err

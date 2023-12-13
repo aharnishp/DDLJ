@@ -57,7 +57,8 @@ GRAPH_NAME = args.graph
 LABELMAP_NAME = args.labels
 VIDEO_NAME = args.video
 if(type(VIDEO_NAME) == type(None)):
-    VIDEO_NAME = "../../vi.mp4"
+    VIDEO_NAME = "../media/part0.mp4"
+    # VIDEO_NAME = "../../vi.mp4"
 VIDEO_NAME = "/home/aharnish/Documents/cc/DDLJ/static/vi.mp4"
 min_conf_threshold = float(args.threshold)
 use_TPU = args.edgetpu
