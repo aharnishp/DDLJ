@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSE205 Cloud Computing - Group 05</title>
+    <title>CSE525 Cloud Computing - Group 06 : DDLJ</title>
     <link rel="stylesheet" href="style.css">
     <link rel="shortcut icon" href="https://discord.com/favicon.ico" type="image/x-icon">
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
     <style>
+        /* Your existing CSS styles */
         body {
             font-family: sans-serif;
             margin: 0;
@@ -60,7 +61,7 @@
             gap: 1em;
         }
 
-        .low-opacity{
+        .low-opacity {
             opacity: 0.65;
             font-weight: 300;
         }
@@ -130,41 +131,38 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        /* Additional or modified styles for download page */
+        /* Modify as needed */
+        .download-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #36393f;
+            /* Background color */
+            color: #f0f2f5;
+            /* Text color */
+        }
+
+        .download-link {
+            font-size: 1.2em;
+            margin-top: 1em;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="download-container">
         <div class="header">
             <h1>CSE525 Cloud Computing</h1>
             <h2>Group 06 : DDLJ</h2>
         </div>
-        <form action="http://localhost:8000/uploads" method="post" enctype="multipart/form-data">
-            <h3>Upload a File</h3>
-            <input type="file" name="uploadFile" />
-            <input type="submit" value="Upload" />
-        </form>
         <div class="content">
-            <div>
-                <h3>Project Description</h3>
-                <p class="low-opacity">In response to the challenges posed by the time-intensive nature of big data processing and machine
-                    learning models, our project, Distributed Deep Learning Jobs (DDLJ), aims to harness the power of
-                    volunteer computing resources for efficient and scalable analysis. By breaking down the data into
-                    manageable chunks and distributing them across multiple systems, we intend to parallelize the
-                    computation, reducing the overall processing time. By harnessing the collective power of volunteer
-                    computing and cloud resources, DDLJ anticipates a substantial reduction in the time required for
-                    deep
-                    learning analysis on video data. </p>
-            </div>
-            <div>
-                <h3>Team Members</h3>
-                <ul class="low-opacity">
-                    <li>AU2040022 | Aharnish Pithva </li>
-                    <li>AU2040028 | Yansi Memdani</li>
-                    <li>AU2040051 | Jevin Jivani</li>
-                    <li>AU2040110 | Mohnish Mirchandani</li>
-                </ul>
-            </div>
+            <h3>Download File</h3>
+            <p class="low-opacity">Click the link below to download the file:</p>
+            <a href="http://localhost:8000/downloadfile" class="download-link">Download File</a>
         </div>
     </div>
 </body>

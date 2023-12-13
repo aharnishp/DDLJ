@@ -89,7 +89,7 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 		})
 	})
 
-	router.GET("/downloadFile", func(c *gin.Context) {
+	router.GET("/downloadfile", func(c *gin.Context) {
 
 		_, err := os.Stat(filePath)
 		if os.IsNotExist(err) {
@@ -142,7 +142,7 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 
 	router.GET("/", func(c *gin.Context) {
 		// Render the template and pass data if needed
-		c.HTML(http.StatusOK, "index.html", gin.H{
+		c.HTML(http.StatusOK, "download.html", gin.H{
 			"Title": "My Simple Go Gin Page",
 		})
 
