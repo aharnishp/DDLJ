@@ -177,6 +177,8 @@ func main() {
 
 	// connectionManager := &ConnectionManager{}
 
+	startTime := time.Now()
+
 	var executeService = make(chan eventTrigger)
 
 	go runWebService("8000", executeService)
@@ -194,6 +196,8 @@ func main() {
 
 			switch msg.Payload {
 			case true:
+				videoStartTime := time.Now()
+
 				var wg sync.WaitGroup
 				wg.Add(len(connectionManager.connections))
 				splitVideo(videoPath, outputDirectory, len(connectionManager.connections))
@@ -208,11 +212,20 @@ func main() {
 				// executeService <- eventTrigger{Type: "executeService", Payload: false}
 				wg.Wait()
 
+				videoEndTime := time.Now()
+				fmt.Printf("Video processing time: %v\n", videoEndTime.Sub(videoStartTime))
+
 				outputFilePath := "./files/combined.csv"
 				inputFolder := "./files/"
 				if err := combineCSVFiles(outputFilePath, inputFolder); err != nil {
 					fmt.Println("Error combining CSV files:", err)
 				}
+
+				endTime := time.Now()
+                fmt.Printf("Total execution time: %v\n", endTime.Sub(startTime))
+
+				storeExecutionTime(startTime, endTime)
+
 
 				// Reset connections and prepare for the next execution
 				// connectionManager.connections = nil
@@ -536,3 +549,18 @@ func combineCSVFiles(outputFilePath string, inputFolder string) error {
 
 	return nil
 }
+
+func storeExecutionTime(startTime, endTime time.Time) error {
+    executionTime := endTime.Sub(startTime)
+    content := fmt.Sprintf("Total Execution Time: %v\n", executionTime)
+
+    err := ioutil.WriteFile("./files/logger.txt", []byte(content), 0644)
+    if err != nil {
+        fmt.Println("Error writing execution time to file:", err)
+        return err
+    }
+
+    fmt.Printf("Total execution time written to %s\n", filePath)
+    return nil
+}
+
