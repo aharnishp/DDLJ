@@ -2,31 +2,32 @@ package main
 
 import (
 	// "bufio"
+	"encoding/csv"
 	"flag"
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+
 	"github.com/gin-gonic/gin"
-	"encoding/csv"
-    "io/ioutil"
-    "strings"
 )
 
 var (
-	listenAddress   = ":8080"
-	videoPath       = "./media/vi.mp4" // Change this to your video file path
-	segmentSize     = 1024 * 1024      // 1 MB segments
-	outputDirectory = "./media/"
-	duration        = 5
-	filePath        = "./files/file0.csv"
+	listenAddress     = ":8080"
+	videoPath         = "./media/vi.mp4" // Change this to your video file path
+	segmentSize       = 1024 * 1024      // 1 MB segments
+	outputDirectory   = "./media/"
+	duration          = 5
+	filePath          = "./files/file0.csv"
 	connectionManager = &ConnectionManager{}
 )
 
@@ -121,7 +122,7 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 
 		// Save the file
 		filename := file.Filename
-		err = c.SaveUploadedFile(file, "uploads/" + filename)
+		err = c.SaveUploadedFile(file, "uploads/"+filename)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -130,14 +131,11 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 		// redirect to loading route
 		c.Redirect(http.StatusMovedPermanently, "/loading")
 
-
 		// c.Redirect(http.StatusMovedPermanently, "/")
-
 
 		// Return success response
 		// c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully!"})
 		// startTrigger <- eventTrigger{Type: "executeService", Payload: true}
-		
 
 	})
 
@@ -183,8 +181,6 @@ func main() {
 
 	go runWebService("8000", executeService)
 
-
-
 	for {
 		go connectionManager.AcceptConnections(listener)
 
@@ -213,27 +209,26 @@ func main() {
 				wg.Wait()
 
 				outputFilePath := "./files/combined.csv"
-                inputFolder := "./files/"
-                if err := combineCSVFiles(outputFilePath, inputFolder); err != nil {
-                    fmt.Println("Error combining CSV files:", err)
-                }
+				inputFolder := "./files/"
+				if err := combineCSVFiles(outputFilePath, inputFolder); err != nil {
+					fmt.Println("Error combining CSV files:", err)
+				}
 
-                // Reset connections and prepare for the next execution
-                // connectionManager.connections = nil
+				// Reset connections and prepare for the next execution
+				// connectionManager.connections = nil
 			case false:
 				time.Sleep(1 * time.Second)
 				continue
 			}
 
-		// default:
-		// 	time.Sleep(1 * time.Second)
-		// 	continue
+		default:
+			time.Sleep(1 * time.Second)
+			continue
 		}
 
 	}
 
 }
-
 
 // ConnectionManager represents a structure to manage connections
 type ConnectionManager struct {
@@ -476,10 +471,10 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	defer file.Close()
 
 	// Set a deadline for the entire file transfer process
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second)) // Adjust the timeout duration as needed
+	// Adjust the timeout duration as needed
 	fmt.Println("Before io.Copy")
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	conn.SetReadDeadline(time.Time{})
 	_, err = io.Copy(file, conn)
 	if err != nil {
 		fmt.Println("Error receiving file content:", err)
@@ -502,43 +497,42 @@ func flushStorage() {
 
 }
 
-
 func combineCSVFiles(outputFilePath string, inputFolder string) error {
-    files, err := ioutil.ReadDir(inputFolder)
-    if err != nil {
-        return err
-    }
+	files, err := ioutil.ReadDir(inputFolder)
+	if err != nil {
+		return err
+	}
 
-    combinedFile, err := os.Create(outputFilePath)
-    if err != nil {
-        return err
-    }
-    defer combinedFile.Close()
+	combinedFile, err := os.Create(outputFilePath)
+	if err != nil {
+		return err
+	}
+	defer combinedFile.Close()
 
-    writer := csv.NewWriter(combinedFile)
-    defer writer.Flush()
+	writer := csv.NewWriter(combinedFile)
+	defer writer.Flush()
 
-    for _, file := range files {
-        if strings.HasSuffix(file.Name(), ".csv") {
-            filePath := filepath.Join(inputFolder, file.Name())
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".csv") {
+			filePath := filepath.Join(inputFolder, file.Name())
 
-            data, err := ioutil.ReadFile(filePath)
-            if err != nil {
-                return err
-            }
+			data, err := ioutil.ReadFile(filePath)
+			if err != nil {
+				return err
+			}
 
-            // Write each line of the CSV file to the combined CSV file
-            lines := strings.Split(string(data), "\n")
-            for _, line := range lines {
-                if line != "" {
-                    fields := strings.Split(line, ",")
-                    if err := writer.Write(fields); err != nil {
-                        return err
-                    }
-                }
-            }
-        }
-    }
+			// Write each line of the CSV file to the combined CSV file
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				if line != "" {
+					fields := strings.Split(line, ",")
+					if err := writer.Write(fields); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
 
-    return nil
+	return nil
 }
