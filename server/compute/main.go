@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -69,18 +68,18 @@ func formatAsDate(t time.Time) string {
 func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 	router := gin.Default()
 	router.Delims("{[{", "}]}")
+	router.LoadHTMLGlob("templates/*.html")
 	router.SetFuncMap(template.FuncMap{
 		"formatAsDate": formatAsDate,
 	})
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "DDLJ",
-		})
-	})
+	// router.GET("/", func(c *gin.Context) {
+	// 	c.JSON(http.StatusOK, gin.H{
+	// 		"message": "DDLJ",
+	// 	})
+	// })
 
 	router.GET("/dummyService", func(c *gin.Context) {
-
 		startTrigger <- eventTrigger{Type: "executeService", Payload: true}
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Your Service has started",
@@ -107,29 +106,35 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 		c.File(filePath)
 	})
 
-	router.POST("/upload", func(c *gin.Context) {
-		file, err := c.FormFile("video")
+	// Handling POST request at "/uploads"
+	router.POST("/uploads", func(c *gin.Context) {
+		// Get the uploaded file
+		file, err := c.FormFile("uploadFile")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Set the file path for storing
-		filePath := "../media/" + file.Filename
-
-		// Save the file to the specified directory
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
+		// Save the file
+		filename := file.Filename
+		err = c.SaveUploadedFile(file, "uploads/" + filename)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"message": "File uploaded successfully",
-		})
+		// Return success response
+		c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully!"})
+		startTrigger <- eventTrigger{Type: "executeService", Payload: true}
+		
+
 	})
 
-	router.GET("/upload", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "./templates/upload/upload.html", gin.H{"message": "OK"})
+	router.GET("/", func(c *gin.Context) {
+		// Render the template and pass data if needed
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Title": "My Simple Go Gin Page",
+		})
 	})
 
 	router.Run(":" + serverPort)
