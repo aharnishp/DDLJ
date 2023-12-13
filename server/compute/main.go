@@ -143,7 +143,7 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 
 	router.GET("/", func(c *gin.Context) {
 		// Render the template and pass data if needed
-		c.HTML(http.StatusOK, "download.html", gin.H{
+		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Title": "My Simple Go Gin Page",
 		})
 
@@ -152,6 +152,13 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 	router.GET("/loading", func(c *gin.Context) {
 		// Render the template and pass data if needed
 		c.HTML(http.StatusOK, "loading.html", gin.H{
+			"Title": "My Simple Go Gin Page",
+		})
+	})
+
+	router.GET("/downloads", func(c *gin.Context) {
+		// Render the template and pass data if needed
+		c.HTML(http.StatusOK, "download.html", gin.H{
 			"Title": "My Simple Go Gin Page",
 		})
 	})
