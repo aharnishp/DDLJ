@@ -13,3 +13,4 @@ client/media/
 client/models/*
 
 temp/
+client/py-tensorflow/tflite1-env
