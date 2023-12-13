@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	// "bufio"
 	"flag"
 	"fmt"
 	"html/template"
@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"io"
+
 
 	"github.com/gin-gonic/gin"
 )
@@ -399,6 +401,30 @@ func sendFileToClient(conn net.Conn, filePath string) {
 	return
 }
 
+// func receiveFileFromClient(conn net.Conn, filePath string) {
+// 	file, err := os.Create(filePath)
+// 	if err != nil {
+// 		fmt.Println("Error creating file:", err)
+// 		return
+// 	}
+// 	defer file.Close()
+
+// 	scanner := bufio.NewScanner(conn)
+
+// 	for scanner.Scan() {
+// 		line := scanner.Text()
+// 		if line == "EOF" {
+// 			file.WriteString(line + "\n")
+// 			break
+// 		}
+// 		fmt.Println(line)
+// 		file.WriteString(line + "\n")
+// 	}
+
+// 	return
+
+// }
+
 func receiveFileFromClient(conn net.Conn, filePath string) {
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -407,21 +433,28 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(conn)
+	// Set a deadline for the entire file transfer process
+	conn.SetReadDeadline(time.Now().Add(5 * time.Second)) // Adjust the timeout duration as needed
+	fmt.Println("Before io.Copy")
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "EOF" {
-			file.WriteString(line + "\n")
-			break
-		}
-		fmt.Println(line)
-		file.WriteString(line + "\n")
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+_, err = io.Copy(file, conn)
+if err != nil {
+    fmt.Println("Error receiving file content:", err)
+    return
+}
+
+fmt.Println("After io.Copy")
+
+	if err != nil {
+		fmt.Println("Error receiving file content:", err)
+		return
 	}
 
-	return
-
+	fmt.Println("File received successfully.")
 }
+
+
 
 func flushStorage() {
 

@@ -36,30 +36,58 @@ func introduce() {
 	fmt.Print("A project developed at Ahmedabad University by Aharnish, Jevin, Mohnish, and Yansi\n")
 }
 
+// func isConnectionActive(conn net.Conn) bool {
+// 	// Set a deadline for the read or write operation
+// 	conn.SetReadDeadline(time.Now().Add(time.Second))
+
+// 	// Attempt to read a small amount of data
+// 	buffer := make([]byte, 1)
+// 	_, err := conn.Read(buffer)
+
+// 	// Reset the deadline
+// 	conn.SetReadDeadline(time.Time{})
+
+// 	// Check for errors
+// 	if err != nil {
+// 		// Check if the error indicates a timeout, which means the connection is still active
+// 		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+// 			return true
+// 		}
+
+// 		// If the error is not a timeout, the connection is likely closed
+// 		return false
+// 	}
+
+// 	return true
+// }
+
 func isConnectionActive(conn net.Conn) bool {
-	// Set a deadline for the read or write operation
-	conn.SetReadDeadline(time.Now().Add(time.Second))
+    // Set a deadline for the read or write operation
+    conn.SetReadDeadline(time.Now().Add(time.Second))
 
-	// Attempt to read a small amount of data
-	buffer := make([]byte, 1)
-	_, err := conn.Read(buffer)
+    // Attempt to read a small amount of data
+    buffer := make([]byte, 1)
+    _, err := conn.Read(buffer)
 
-	// Reset the deadline
-	conn.SetReadDeadline(time.Time{})
+    // Reset the deadline
+    conn.SetReadDeadline(time.Time{})
 
-	// Check for errors
-	if err != nil {
-		// Check if the error indicates a timeout, which means the connection is still active
-		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-			return true
-		}
+    // Check for errors
+    if err != nil {
+        // Check if the error indicates a timeout, which means the connection is still active
+        if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+            return true
+        }
 
-		// If the error is not a timeout, the connection is likely closed
-		return false
-	}
+        // If the error is not a timeout, print the error
+        fmt.Println("Error checking connection:", err)
 
-	return true
+        return false
+    }
+
+    return true
 }
+
 
 func main() {
 
@@ -166,6 +194,35 @@ func receiveFileFromServer(conn net.Conn) (string, int64, error) {
 	return filePath, fileSize, nil
 }
 
+// func sendFileToServer(conn net.Conn, filePath string) {
+// 	file, err := os.Open(filePath)
+// 	if err != nil {
+// 		fmt.Println("Error opening file:", err)
+// 		return
+// 	}
+// 	defer file.Close()
+
+// 	fileInfo, _ := file.Stat()
+// 	fileSize := fileInfo.Size()
+// 	fileName := filepath.Base(filePath)
+
+// 	conn.Write([]byte(fmt.Sprintf("%s %d\n", fileName, fileSize)))
+
+// 	buffer := make([]byte, 1024)
+// 	for {
+// 		n, err := file.Read(buffer)
+// 		if err != nil {
+// 			break
+// 		}
+// 		fmt.Println(buffer)
+// 		conn.Write(buffer[:n])
+// 	}
+
+// 	conn.Write([]byte("\nEOF\n"))
+// 	return
+
+// }
+
 func sendFileToServer(conn net.Conn, filePath string) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -178,22 +235,24 @@ func sendFileToServer(conn net.Conn, filePath string) {
 	fileSize := fileInfo.Size()
 	fileName := filepath.Base(filePath)
 
+	// Send the file name and size to the server
 	conn.Write([]byte(fmt.Sprintf("%s %d\n", fileName, fileSize)))
 
-	buffer := make([]byte, 1024)
-	for {
-		n, err := file.Read(buffer)
-		if err != nil {
-			break
-		}
-		fmt.Println(buffer)
-		conn.Write(buffer[:n])
+	// Use io.Copy to copy the file content to the connection
+	_, err = io.Copy(conn, file)
+	if err != nil {
+		fmt.Println("Error sending file content:", err)
+		return
 	}
 
+	// Signal the end of file to the server
 	conn.Write([]byte("\nEOF\n"))
-	return
 
+	fmt.Println("File sent successfully.")
 }
+
+
+
 
 func receiveAcknowledgment(conn net.Conn) (string, error) {
 	reader := bufio.NewReader(conn)
