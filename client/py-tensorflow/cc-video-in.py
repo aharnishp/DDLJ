@@ -12,6 +12,9 @@
 #
 # I added my own method of drawing boxes and labels using OpenCV.
 
+# cd py-tensorflow/ && source tflite1-env/bin/activate && python3 cc-video-in.py --modeldir models/SSD_TFLite3 --video ../media/part0.mp4 --out ../files/data.csv
+
+
 # Import packages
 import os
 import argparse
@@ -38,6 +41,8 @@ parser.add_argument('--threshold', help='Minimum confidence threshold for displa
                     default=0.5)
 parser.add_argument('--video', help='Name of the video file',
                     default='test.mp4')
+parser.add_argument('--outcsv', help='Name of the csv file',
+                    default='../files/data.csv')
 parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed up detection',
                     action='store_true')
 
@@ -52,6 +57,9 @@ if(type(VIDEO_NAME) == type(None)):
 VIDEO_NAME = "/home/aharnish/Documents/cc/DDLJ/static/vi.mp4"
 min_conf_threshold = float(args.threshold)
 use_TPU = args.edgetpu
+
+
+csv_name = args.outcsv
 
 # Clear out file before run
 f = open(csv_name, "w")
@@ -201,7 +209,7 @@ while(video.isOpened()):
         cv2.imshow('Object detector', frame)
 
     if(store_csv):
-        print("now storing to " + csv_name)
+        print("now storing for frame=" + str(frame_count) +" to " + csv_name)
         detection_str = ""
         for obj in detections:
             detection_str += str(frame_count) + "," + obj[0] + "," + str(obj[1]) + "," + str(obj[2]) + "," + str(obj[3]) + "," + str(obj[4]) + "," + str(obj[5]) + "\n"

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -145,15 +146,16 @@ func main() {
 }
 
 func runAnalysisService() {
-	// c := exec.Command("python ./client/service/main.py")
+	// FIXME: change to relative path
+	c := exec.Command("cd py-tensorflow/ && source tflite1-env/bin/activate && python3 cc-video-in.py --modeldir models/SSD_TFLite3 --video /home/aharnish/Documents/cc/DDLJ/client/media/part0.mp4")
 
-	// if err := c.Run(); err != nil {
-	// 	fmt.Println("Error: ", err)
-	// }
+	if err := c.Run(); err != nil {
+		fmt.Println("Error: ", err)
+	}
 
-	fmt.Println("Update: Service Started")
-	time.Sleep(3 * time.Second)
-	fmt.Println("Update: Service done")
+	// fmt.Println("Update: Service Started")
+	// time.Sleep(3 * time.Second)
+	// fmt.Println("Update: Service done")
 }
 
 func receiveFileFromServer(conn net.Conn) (string, int64, error) {
