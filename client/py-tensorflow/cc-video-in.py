@@ -41,7 +41,7 @@ parser.add_argument('--labels', help='Name of the labelmap file, if different th
 parser.add_argument('--threshold', help='Minimum confidence threshold for displaying detected objects',
                     default=0.5)
 parser.add_argument('--video', help='Name of the video file',
-                    default=(add_path_prefix + 'test.mp4'))
+                    default=(add_path_prefix + 'media/part0.mp4'))
 parser.add_argument('--outcsv', help='Name of the csv file',
                     default=add_path_prefix + ('../files/data.csv'))
 parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed up detection',
@@ -57,9 +57,9 @@ GRAPH_NAME = args.graph
 LABELMAP_NAME = args.labels
 VIDEO_NAME = args.video
 if(type(VIDEO_NAME) == type(None)):
-    VIDEO_NAME = "../media/part0.mp4"
+    VIDEO_NAME = "media/part0.mp4"
     # VIDEO_NAME = "../../vi.mp4"
-VIDEO_NAME = "/home/aharnish/Documents/cc/DDLJ/static/vi.mp4"
+VIDEO_NAME = "media/part0.mp4"
 min_conf_threshold = float(args.threshold)
 use_TPU = args.edgetpu
 
