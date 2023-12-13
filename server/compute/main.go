@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -13,8 +14,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"io"
-
 
 	"github.com/gin-gonic/gin"
 )
@@ -173,9 +172,16 @@ func main() {
 
 			switch msg.Payload {
 			case true:
+				var wg sync.WaitGroup
+				wg.Add(len(connectionManager.connections))
 				splitVideo(videoPath, outputDirectory, len(connectionManager.connections))
 				for i := 0; i < len(connectionManager.connections); i++ {
-					handleClient(connectionManager.connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+					// handleClient(connectionManager.connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+					go func(i int) {
+						defer wg.Done() // Decrement the counter when the goroutine completes
+
+						handleClient(connectionManager.connections[i], fmt.Sprintf("./media/part%d.mp4", i), fmt.Sprintf("./files/file%d.csv", i))
+					}(i)
 				}
 				// executeService <- eventTrigger{Type: "executeService", Payload: false}
 
@@ -438,13 +444,13 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	fmt.Println("Before io.Copy")
 
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-_, err = io.Copy(file, conn)
-if err != nil {
-    fmt.Println("Error receiving file content:", err)
-    return
-}
+	_, err = io.Copy(file, conn)
+	if err != nil {
+		fmt.Println("Error receiving file content:", err)
+		return
+	}
 
-fmt.Println("After io.Copy")
+	fmt.Println("After io.Copy")
 
 	if err != nil {
 		fmt.Println("Error receiving file content:", err)
@@ -453,8 +459,6 @@ fmt.Println("After io.Copy")
 
 	fmt.Println("File received successfully.")
 }
-
-
 
 func flushStorage() {
 
