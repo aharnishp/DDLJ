@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -13,8 +14,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"io"
-
 
 	"github.com/gin-gonic/gin"
 )
@@ -435,16 +434,18 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 
 	// Set a deadline for the entire file transfer process
 	conn.SetReadDeadline(time.Now().Add(5 * time.Second)) // Adjust the timeout duration as needed
+	// conn.SetReadDeadline(time.Unix(0, 0)) // time.Now().Add(10 * time.Second))
 	fmt.Println("Before io.Copy")
 
+	// conn.SetReadDeadline(time.Unix(0, 0)) // time.Now().Add(10 * time.Second))
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-_, err = io.Copy(file, conn)
-if err != nil {
-    fmt.Println("Error receiving file content:", err)
-    return
-}
+	_, err = io.Copy(file, conn)
+	if err != nil {
+		fmt.Println("Error receiving file content:", err)
+		return
+	}
 
-fmt.Println("After io.Copy")
+	fmt.Println("After io.Copy")
 
 	if err != nil {
 		fmt.Println("Error receiving file content:", err)
@@ -453,8 +454,6 @@ fmt.Println("After io.Copy")
 
 	fmt.Println("File received successfully.")
 }
-
-
 
 func flushStorage() {
 
