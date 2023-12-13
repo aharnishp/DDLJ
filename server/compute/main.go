@@ -29,6 +29,7 @@ var (
 	duration          = 5
 	filePath          = "./files/file0.csv"
 	connectionManager = &ConnectionManager{}
+	doneService       = false
 )
 
 func introduce() {
@@ -78,12 +79,6 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 		"formatAsDate": formatAsDate,
 	})
 
-	// router.GET("/", func(c *gin.Context) {
-	// 	c.JSON(http.StatusOK, gin.H{
-	// 		"message": "DDLJ",
-	// 	})
-	// })
-
 	router.GET("/dummyService", func(c *gin.Context) {
 		startTrigger <- eventTrigger{Type: "executeService", Payload: true}
 		c.JSON(http.StatusOK, gin.H{
@@ -121,30 +116,31 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 		}
 
 		// Save the file
-		filename := file.Filename
-		err = c.SaveUploadedFile(file, "uploads/"+filename)
+		// filename := file.Filename
+		err = c.SaveUploadedFile(file, "./media/"+"vi.mp4")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		// redirect to loading route
+		startTrigger <- eventTrigger{Type: "executeService", Payload: true}
 		c.Redirect(http.StatusMovedPermanently, "/loading")
-
-		// c.Redirect(http.StatusMovedPermanently, "/")
-
-		// Return success response
-		// c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully!"})
-		// startTrigger <- eventTrigger{Type: "executeService", Payload: true}
 
 	})
 
 	router.GET("/", func(c *gin.Context) {
 		// Render the template and pass data if needed
-		c.HTML(http.StatusOK, "download.html", gin.H{
+		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Title": "My Simple Go Gin Page",
 		})
 
+	})
+
+	router.GET("/downloads", func(c *gin.Context) {
+		// Render the template and pass data if needed
+		c.HTML(http.StatusOK, "download.html", gin.H{
+			"Title": "My Simple Go Gin Page",
+		})
 	})
 
 	router.GET("/loading", func(c *gin.Context) {
@@ -152,6 +148,19 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 		c.HTML(http.StatusOK, "loading.html", gin.H{
 			"Title": "My Simple Go Gin Page",
 		})
+	})
+
+	router.GET("/trigger-event", func(c *gin.Context) {
+		// Simulate some event happening
+
+		if doneService {
+			doneService = false
+			c.JSON(http.StatusOK, gin.H{"status": "success"})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"status": "pending"})
+		}
+
+		// Respond with a JSON object
 	})
 
 	router.Run(":" + serverPort)
@@ -451,30 +460,6 @@ func sendFileToClient(conn net.Conn, filePath string) {
 	return
 }
 
-// func receiveFileFromClient(conn net.Conn, filePath string) {
-// 	file, err := os.Create(filePath)
-// 	if err != nil {
-// 		fmt.Println("Error creating file:", err)
-// 		return
-// 	}
-// 	defer file.Close()
-
-// 	scanner := bufio.NewScanner(conn)
-
-// 	for scanner.Scan() {
-// 		line := scanner.Text()
-// 		if line == "EOF" {
-// 			file.WriteString(line + "\n")
-// 			break
-// 		}
-// 		fmt.Println(line)
-// 		file.WriteString(line + "\n")
-// 	}
-
-// 	return
-
-// }
-
 func receiveFileFromClient(conn net.Conn, filePath string) {
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -547,6 +532,7 @@ func combineCSVFiles(outputFilePath string, inputFolder string) error {
 		}
 	}
 
+	doneService = true
 	return nil
 }
 

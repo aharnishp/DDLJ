@@ -1,43 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Loading Spinner</title>
-    <!-- <link rel="stylesheet" href="loading.css"> -->
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #FFF;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Title}}</title>
+  <style>
+    /* Add some basic styling for the spinner */
+    #spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      display: none; /* Initially hide the spinner */
+    }
 
-        .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
+    /* Add a simple rotation animation for the spinner */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+    /* Style for the button */
+    #myButton {
+      display: block; /* Initially hide the button */
+    }
+  </style>
 </head>
-
 <body>
-    <div class="loader"></div>
-</body>
 
+
+    <!-- Button (Initially hidden) -->
+    <button id="checkFile" onclick="checkFileStatus()">Click to check file status</button>
+
+    <button id="myButton"><a href="http://localhost:8000/downloadfile">Click to download</a></button>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+//   // Show spinner
+//   document.getElementById("spinner").style.display = "block";
+console.log("Working")
+  // Make an asynchronous request to the server
+ 
+});
+
+function checkFileStatus() {
+  // Make an asynchronous request to the server to check file status
+    fetch("/trigger-event")
+        .then(response => response.json())
+        .then(data => {
+        // Show dialogue box based on the response
+        console.log(data);
+        if (data.status === "pending") {
+            alert("Video not done");
+        } else {
+            // Download the file (replace with your actual logic)
+            // For now, let's show a success message
+            alert("Download file");
+        }
+        })
+        .catch(error => {
+        console.error('Error:', error);
+        // Handle errors if needed
+        });
+    }
+</script>
+
+</body>
 </html>
