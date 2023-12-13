@@ -27,6 +27,7 @@ var (
 	outputDirectory = "./media/"
 	duration        = 5
 	filePath        = "./files/file0.csv"
+	connectionManager = &ConnectionManager{}
 )
 
 func introduce() {
@@ -176,7 +177,7 @@ func main() {
 	defer listener.Close()
 	fmt.Println("Slave Connection Server is listening on port", listenAddress)
 
-	connectionManager := &ConnectionManager{}
+	// connectionManager := &ConnectionManager{}
 
 	var executeService = make(chan eventTrigger)
 
@@ -254,7 +255,7 @@ func (cm *ConnectionManager) AcceptConnections(listener net.Listener) {
 
 		// Handle the connection concurrently
 		fmt.Println("Accepted connection from", conn.RemoteAddr())
-		go cm.handleConnection(conn)
+		// go cm.handleConnection(conn)
 	}
 }
 
@@ -493,6 +494,8 @@ func receiveFileFromClient(conn net.Conn, filePath string) {
 	}
 
 	fmt.Println("File received successfully.")
+
+	connectionManager.removeConnection(conn)
 }
 
 func flushStorage() {

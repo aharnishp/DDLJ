@@ -1,3 +1,4 @@
+// sudo mount --bind '/media/yansi/241672E41672B680/Users/memda/CC-DDLJ-Image-No-Timeout' '/home/yansi/cc/mount-to-windows'
 package main
 
 import (

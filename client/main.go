@@ -104,12 +104,7 @@ func main() {
 
 	}
 	// Connect to the server
-	conn, err := net.Dial("tcp", serverAddress)
-	if err != nil {
-		fmt.Println("Error connecting to the server:", err)
-		return
-	}
-	defer conn.Close()
+	
 
 	// Receive video segments from the server
 
@@ -119,6 +114,12 @@ func main() {
 		// 	fmt.Println("Error: Connection Lost")
 		// 	break
 		// }
+		conn, err := net.Dial("tcp", serverAddress)
+		if err != nil {
+			fmt.Println("Error connecting to the server:", err)
+			return
+		}
+		defer conn.Close()
 
 		fileName, fileSize, err := receiveFileFromServer(conn)
 		if err != nil {
@@ -249,6 +250,7 @@ func sendFileToServer(conn net.Conn, filePath string) {
 
 	// Signal the end of file to the server
 	conn.Write([]byte("\nEOF\n"))
+	conn.Close()
 
 	fmt.Println("File sent successfully.")
 }
