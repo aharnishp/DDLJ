@@ -126,9 +126,16 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 			return
 		}
 
+		// redirect to loading route
+		c.Redirect(http.StatusMovedPermanently, "/loading")
+
+
+		// c.Redirect(http.StatusMovedPermanently, "/")
+
+
 		// Return success response
-		c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully!"})
-		startTrigger <- eventTrigger{Type: "executeService", Payload: true}
+		// c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully!"})
+		// startTrigger <- eventTrigger{Type: "executeService", Payload: true}
 		
 
 	})
@@ -136,6 +143,14 @@ func runWebService(serverPort string, startTrigger chan<- eventTrigger) {
 	router.GET("/", func(c *gin.Context) {
 		// Render the template and pass data if needed
 		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Title": "My Simple Go Gin Page",
+		})
+
+	})
+
+	router.GET("/loading", func(c *gin.Context) {
+		// Render the template and pass data if needed
+		c.HTML(http.StatusOK, "loading.html", gin.H{
 			"Title": "My Simple Go Gin Page",
 		})
 	})

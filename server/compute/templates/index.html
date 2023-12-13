@@ -1,13 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>File Upload </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSE205 Cloud Computing - Group 05</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="https://discord.com/favicon.ico" type="image/x-icon">
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #36393f;
+            color: #f0f2f5;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .logo {
+            margin-top: 1em;
+            width: 100px;
+        }
+
+        .header {
+            margin-top: 2em;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-top: 0.2em;
+        }
+
+        .content {
+            margin-top: 2em;
+            padding: 2em;
+            border-radius: 5px;
+            background-color: #2f3136;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+        }
+
+        .low-opacity{
+            opacity: 0.65;
+            font-weight: 300;
+        }
+
+        h3 {
+            font-size: 1.5em;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        a {
+            color: #f0f2f5;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            padding: 1em 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.5em;
+            padding: 1em 0;
+        }
+
+
+        form {
+            margin: 0 auto;
+            width: 50%;
+            padding: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 1em;
+            margin: 1em 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 1em;
+            margin: 1em 0;
+            background-color: #9900ff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Upload a File hhel</h1>
-    <form action="http://localhost:8000/uploads" method="post" enctype="multipart/form-data">
-        <input type="file" name="uploadFile" />
-        <input type="submit" value="Upload" />
-    </form>
+    <div class="container">
+        <div class="logo">
+            <img src="https://discord.com/assets/67e7d37572672897681ca380da10e910.svg" alt="Discord">
+        </div>
+        <div class="header">
+            <h1>CSE525 Cloud Computing</h1>
+            <h2>Group 06 : DDLJ</h2>
+        </div>
+        <form action="http://localhost:8000/uploads" method="post" enctype="multipart/form-data">
+            <h3>Upload a File</h3>
+            <input type="file" name="uploadFile" />
+            <input type="submit" value="Upload" />
+        </form>
+        <div class="content">
+            <div>
+                <h3>Project Description</h3>
+                <p class="low-opacity">In response to the challenges posed by the time-intensive nature of big data processing and machine
+                    learning models, our project, Distributed Deep Learning Jobs (DDLJ), aims to harness the power of
+                    volunteer computing resources for efficient and scalable analysis. By breaking down the data into
+                    manageable chunks and distributing them across multiple systems, we intend to parallelize the
+                    computation, reducing the overall processing time. By harnessing the collective power of volunteer
+                    computing and cloud resources, DDLJ anticipates a substantial reduction in the time required for
+                    deep
+                    learning analysis on video data. </p>
+            </div>
+            <div>
+                <h3>Team Members</h3>
+                <ul class="low-opacity">
+                    <li>AU2040022 | Aharnish Pithva </li>
+                    <li>AU2040028 | Yansi Memdani</li>
+                    <li>AU2040051 | Jevin Jivani</li>
+                    <li>AU2040110 | Mohnish Mirchandani</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
